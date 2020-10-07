@@ -21,7 +21,8 @@ colors= [[255, 0, 0], [255, 85, 0], [255, 170, 0], [255, 255, 0], [170, 255, 0],
 def calculate_peaks(numparts,heatmap_avg):
     #Right now there is a score for every part since some parts are likely to need lower thresholds. 
     # TODO: Run grid search to find the ideal values. 
-    score=[0.2,0.2,0.2,0.2,0.2,0.5,0.5,0.5,0.5]
+    print('numparts: ', numparts)
+    score=[0.8, 0.8, 0.8, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6, 0.6]
     all_peaks = []
     peak_counter = 0
     if len(score)<numparts:
@@ -46,6 +47,7 @@ def calculate_peaks(numparts,heatmap_avg):
         peaks_with_score_and_id = [ x + (map_ori[x[1], x[0]], i+peak_counter,) for i,x in enumerate(peaks)] #if x[0]>0 and x[1]>0 ]
         all_peaks.append(peaks_with_score_and_id)
         peak_counter += len(peaks)
+    # print(all_peaks)
     return all_peaks
 
 def candidate_selection(mapIdx,limbSeq,paf_avg,distance_tolerance,resize,thre2,width_ori):
@@ -182,9 +184,28 @@ def inference(input_image,model, params, model_params,show=False,np1=19,np2=38,r
                          interpolation=cv2.INTER_CUBIC)
     paf = paf[:imageToTest_padded.shape[0] - pad[2], :imageToTest_padded.shape[1] - pad[3], :]
     paf = cv2.resize(paf, (oriImg.shape[1], oriImg.shape[0]), interpolation=cv2.INTER_CUBIC)
+
         
     heatmap_avg =  heatmap[...] +heatmap_avg #/ len(multiplier)
+    # for hmap in range(heatmap_avg.shape[2]):
+        # img = heatmap_avg[:, :, hmap]
+        # in_img = np.copy(input_image)
+        # in_img = np.squeeze(in_img)
+        # r_img = img[:,:,np.newaxis]*255
+        # r_img = np.tile(r_img,(1,1,3))
+        # in_img = in_img + r_img
+        # cv2.imwrite('/home/mrwick/Downloads/Result_2/heatmap#'+str(hmap)+'.jpg', in_img)
+
     paf_avg =  paf[...] +paf_avg# / len(multiplier)
+    # for hmap in range(paf_avg.shape[2]):
+    #     img = paf_avg[:, :, hmap]
+    #     in_img = np.copy(input_image)
+    #     in_img = np.squeeze(in_img)
+    #     r_img = img[:,:,np.newaxis]*255
+    #     r_img = np.tile(r_img,(1,1,3))
+    #     in_img = in_img + r_img
+    #     cv2.imwrite('/home/mrwick/Downloads/Result_2/paf#'+str(hmap)+'.jpg', in_img)
+
     toc_resizing = time.time()
     logger.debug('Resizing prediction frame time is %.5f' % (toc_resizing - tic_resizing))
 
@@ -194,7 +215,7 @@ def inference(input_image,model, params, model_params,show=False,np1=19,np2=38,r
     tic_localmax=time.time()
     # New function to allow parralel execution
     all_peaks=calculate_peaks(numparts,heatmap_avg)
-    #print(all_peaks)
+    print(all_peaks)
     
     toc_localmax=time.time()
     logger.debug('Non Local maxima frame time is %.5f' % (toc_localmax - tic_localmax))
@@ -224,8 +245,9 @@ def inference(input_image,model, params, model_params,show=False,np1=19,np2=38,r
                     # failure case when 2 body parts overlaps
                     if norm == 0:
                         continue
-                    if norm >distance_tolerance//resize:
-                        continue 
+                    # if norm >distance_tolerance//resize:
+                    # 	print('not tolerated ', k, mapIdx[k])
+                    # 	continue 
                         
                     vec = np.divide(vec, norm)
 
@@ -242,7 +264,7 @@ def inference(input_image,model, params, model_params,show=False,np1=19,np2=38,r
                     score_midpts = np.multiply(vec_x, vec[0]) + np.multiply(vec_y, vec[1])
                     score_with_dist_prior = sum(score_midpts) / len(score_midpts) + min(
                         0.5 * oriImg.shape[0] / norm - 1, 0)
-                    criterion1 = len(np.nonzero(score_midpts > params['thre2'])[0]) > 0.7 * len(
+                    criterion1 = len(np.nonzero(score_midpts > params['thre2'])[0]) > 0.5 * len(
                         score_midpts)
                     criterion2 = score_with_dist_prior > 0
                     if criterion1 and criterion2:
@@ -250,6 +272,7 @@ def inference(input_image,model, params, model_params,show=False,np1=19,np2=38,r
                                                      score_with_dist_prior + candA[i][2] + candB[j][2]])
 
             connection_candidate = sorted(connection_candidate, key=lambda x: x[2], reverse=True)
+            # print('connection_candidate:', connection_candidate)
             connection = np.zeros((0, 5))
             for c in range(len(connection_candidate)):
                 i, j, s = connection_candidate[c][0:3]
@@ -258,7 +281,9 @@ def inference(input_image,model, params, model_params,show=False,np1=19,np2=38,r
                     if (len(connection) >= min(nA, nB)):
                         break
 
+            # print('connection: ', connection)
             connection_all.append(connection)
+
         else:
             special_k.append(k)
             connection_all.append([])
@@ -355,20 +380,20 @@ def inference(input_image,model, params, model_params,show=False,np1=19,np2=38,r
     toc_parsing =time.time()
     logger.debug('Parsing result frame time is %.5f' % (toc_parsing - tic_parsing))
     if show:
-        size=1
-        thick=-1
+        size=4
+        thick=1
         for i in range(numparts):#17
-            if i > 4 and i<7:
-                size=4
-                thick =1
-            if i>6:
-                size=4
-                thick =3
+            # if i > 4 and i<7:
+            #     size=4
+            #     thick =1
+            # if i>6:
+            #     size=4
+            #     thick =1
             for j in range(len(all_peaks[i])):
                 
                 cv2.circle(canvas, all_peaks[i][j][0:2], size, colors[i], thickness=thick)
 
-        stickwidth = 10//(resize-1) #4
+        stickwidth = 2//(resize) #4
 
         for i in range(len(limbSeq)):#17
             for n in range(len(subset)):

@@ -154,7 +154,9 @@ def get_augmented_image(meta):
     # Todo : Take RNGDataflow to seed the np.random state. 
     # TODO: Center on the bees thorax. 
     
-    thoraxes = [ p[2] for p in meta.joint_list if p[2][0]>300 and p[2][0]<2200 and p[2][1]>100 and p[2][1]< 1200]
+    thoraxes = [ p[2] for p in meta.joint_list if p[2][0]>0 and p[2][0]<2200 and p[2][1]>0 and p[2][1]< 1400]
+    if len(thoraxes) == 0:
+        thoraxes = [ p[7] for p in meta.joint_list if p[7][0]>0 and p[7][0]<2200 and p[7][1]>0 and p[3][1]< 1400]
     #print(meta.height,meta.width)
     params = random_tform_params((meta.height,meta.width),thoraxes, output_shape=meta.output_shape,mina=meta.mina,maxa=meta.maxa,mins=meta.mins,maxs=meta.maxs)
     

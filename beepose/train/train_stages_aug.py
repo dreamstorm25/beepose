@@ -21,10 +21,18 @@ from beepose.utils.util import save_json
 from beepose.train.inference_model import save_inference_model
 from beepose.utils.util import get_skeleton_from_json, get_skeleton_mapIdx
 from beepose.train.custom_callbacks import AttentionLogger
+from beepose.train.optimizers import MultiSGD
 import cv2
 import keras.backend as K
 import tensorflow as tf
 import matplotlib.pyplot as plt 
+
+from tensorflow.compat.v1 import ConfigProto
+from tensorflow.compat.v1 import InteractiveSession
+
+# config = ConfigProto()
+# config.gpu_options.allow_growth = True
+# session = InteractiveSession(config=config)
 
 os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"   # see issue #152
 
@@ -197,7 +205,7 @@ def main():
     parser.add_argument('--stages', type=int, default =6, help='number of stages')
     
     parser.add_argument('--folder',type=str,default="weights_logs/5p_6/",help='"Where to save this training"' )
-    parser.add_argument('--gpu',default =1, help= 'what gpu to use, if "all" try to allocate on every gpu'  )
+    parser.add_argument('--gpu',default =0, help= 'what gpu to use, if "all" try to allocate on every gpu'  )
     parser.add_argument('--gpu_fraction', type=float, default =0.9, help= 'how much memory of the gpu to use' )
 #     parser.add_argument('--np1', type=int, default =12, help= 'Number of pafs' )
 #     parser.add_argument('--np2', type=int, default =6, help= 'number of heatmaps' )
@@ -253,6 +261,7 @@ def main():
     
     
     config = tf.ConfigProto()
+    config.gpu_options.allow_growth = True
     if gpu != 'all':
         config.gpu_options.visible_device_list= "%d"%gpu
         os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
@@ -317,7 +326,7 @@ def main():
                                     WEIGHTS_COMPLETE,TRAINING_LOG,LOGS_DIR)
    
     # sgd optimizer with lr multipliers
-    #multisgd = MultiSGD(lr=base_lr, momentum=momentum, decay=0.0, nesterov=False, lr_mult=lr_mult)
+    # multisgd = MultiSGD(lr=base_lr, momentum=momentum, decay=0.0, nesterov=False, lr_mult=lr_mult)
     multisgd = Adam(lr=base_lr, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
     # start training
     model.compile(loss=losses, optimizer=multisgd, metrics=["accuracy"])

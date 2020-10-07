@@ -1,4 +1,3 @@
-
 import argparse
 import cv2
 import math
@@ -85,7 +84,7 @@ if __name__ == '__main__':
                4:0.4,5:0.4,
                5:0.09,6:0.09,
                7:0.01}, 
-              'thre2': 0.05, 'thre3': 0.5, 
+              'thre2': 0.09, 'thre3': 0.5, 
               'min_num': 4, 'mid_num': 10, 
               'crop_ratio': 2.5, 'bbox_ratio': 0.25} 
 
@@ -99,10 +98,10 @@ if __name__ == '__main__':
         
         img_resized=cv2.resize(img,(img.shape[1]//resize_factor,img.shape[0]//resize_factor))
         
-        canvas,mappings,parts = inference(img_resized,model, params, model_params,np1=np2,np2=np1,resize=resize_factor,distance_tolerance=310/3,numparts=numparts,
+        canvas,mappings,parts = inference(img_resized,model, params, model_params,show=True,np1=np2,np2=np1,resize=resize_factor,distance_tolerance=310/3,numparts=numparts,
                                                 mapIdx=mapIdx,
                                                 limbSeq=limbSeq)#resize=(256,144))#
-        print(parts)
+        # print(parts)
         
         frame_detections[input_image]={}
         #frame_detections[input_image]['detections']=detections
@@ -111,6 +110,10 @@ if __name__ == '__main__':
         print('writing image', input_image)
         toc = time.time()
         print ('Frame processing time is %.5f' % (toc - tic))
+        name = input_image.split('.')
+        img_name = name[0].split('/')
+
+        cv2.imwrite('/home/mrwick/Downloads/social_data_output/'+img_name[-1]+'_prediction.'+name[1], canvas)
 
     toc_total = time.time()
     print ('Total processing time is %.5f' % (toc_total - tic_total))
