@@ -64,7 +64,7 @@ class CocoMetadata:
         assert len(four_nps) % 4 == 0
         return [(CocoMetadata.parse_float(four_nps[x*4:x*4+4]) + adjust) for x in range(len(four_nps) // 4)]
 
-    def __init__(self, idx, img_url, img_meta, annotations, sigma=8.0,output_shape=(480,600),numparts=5,coco_vecs = list(zip(
+    def __init__(self, idx, img_url, img_meta, annotations, sigma=8.0,output_shape=(368,368),numparts=5,coco_vecs = list(zip(
         [1, 2, 3, 4],
         [2, 3, 4, 5]
             )), translation=False,scale=False,rotation=True,mins=0.25,maxs=1.2,mina=-np.pi,maxa=np.pi, ilumination=0.0,image_type='RGB',is_train=True):
@@ -314,7 +314,7 @@ class CocoPose(RNGDataFlow):
         return inp
 
     def __init__(self, path, img_path=None, is_train=True, decode_img=True, only_idx=-1,numparts=6,
-                 skeleton=list(zip([1,2,3,4],[2,3,4,5])),input_shape=(480,600),output_shape=(480,600),
+                 skeleton=list(zip([1,2,3,4],[2,3,4,5])),input_shape=(480,600),output_shape=(368,368),
                  translation=False,scale=True,rotation=True,
                  mins=0.25,maxs=1.2,mina=-np.pi,maxa=np.pi, ilumination=0.0,sigma=8.0,image_type='RGB'):
         self.is_train = is_train
@@ -518,7 +518,7 @@ def _get_dataflow_onlyread(path, is_train, img_path=None):
     return ds
 
 
-def get_dataflow(path, is_train=True, img_path=None,sigma=8.0,output_shape=(480,600),
+def get_dataflow(path, is_train=True, img_path=None,sigma=8.0,output_shape=(368,368),
                     numparts=5,translation=False,scale=False,rotation=True,
                             mins=0.25,maxs=1.2,mina=-np.pi,maxa=np.pi ,ilumination=0.0,image_type='RGB'):
     print('Creating images from',path)
