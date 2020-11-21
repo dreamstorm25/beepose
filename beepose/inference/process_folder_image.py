@@ -98,7 +98,7 @@ if __name__ == '__main__':
         
         img_resized=cv2.resize(img,(img.shape[1]//resize_factor,img.shape[0]//resize_factor))
         
-        canvas,mappings,parts = inference(img_resized,model, params, model_params,show=True,np1=np2,np2=np1,resize=resize_factor,distance_tolerance=310/3,numparts=numparts,
+        canvas,mappings,parts = inference(img_resized,model, params, model_params,show=False,np1=np2,np2=np1,resize=resize_factor,distance_tolerance=310/3,numparts=numparts,
                                                 mapIdx=mapIdx,
                                                 limbSeq=limbSeq)#resize=(256,144))#
         # print(parts)
@@ -113,7 +113,7 @@ if __name__ == '__main__':
         name = input_image.split('.')
         img_name = name[0].split('/')
 
-        cv2.imwrite('/home/mrwick/Downloads/social_data_output/'+img_name[-1]+'_prediction.'+name[1], canvas)
+        # cv2.imwrite('/home/mrwick/Downloads/data_output/'+img_name[-1]+'_prediction.'+name[1], canvas)
 
     toc_total = time.time()
     print ('Total processing time is %.5f' % (toc_total - tic_total))

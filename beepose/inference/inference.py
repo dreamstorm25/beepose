@@ -302,47 +302,62 @@ def inference(input_image,model, params, model_params,show=False,np1=19,np2=38,r
             if len(connection_all)<=k:
                 logger.warning('Warning: connection not found. There are parts that are  not associated with a connection ')
                 continue
-            partAs = connection_all[k][:, 0]
-            partBs = connection_all[k][:, 1]
-            indexA, indexB = np.array(limbSeq[k]) - 1
+            try:
+                partAs = connection_all[k][:, 0]
+                partBs = connection_all[k][:, 1]
+                indexA, indexB = np.array(limbSeq[k]) - 1
+            except:
+                print("index out of bounds")
 
             for i in range(len(connection_all[k])):  # = 1:size(temp,1)
                 found = 0
                 subset_idx = [-1, -1]
                 for j in range(len(subset)):  # 1:size(subset,1):
-                    if subset[j][indexA] == partAs[i] or subset[j][indexB] == partBs[i]:
-                        subset_idx[found] = j
-                        found += 1
+                    try:
+                        if subset[j][indexA] == partAs[i] or subset[j][indexB] == partBs[i]:
+                            subset_idx[found] = j
+                            found += 1
+                    except:
+                        print("index out of bounds in parts")
                 
                 if found == 1:
                     j = subset_idx[0]
-                    if (subset[j][indexB] != partBs[i]):
-                        subset[j][indexB] = partBs[i]
-                        subset[j][-1] += 1
-                        subset[j][-2] += candidate[partBs[i].astype(int), 2] + connection_all[k][i][2]
+                    try:
+                        if (subset[j][indexB] != partBs[i]):
+                            subset[j][indexB] = partBs[i]
+                            subset[j][-1] += 1
+                            subset[j][-2] += candidate[partBs[i].astype(int), 2] + connection_all[k][i][2]
+                    except:
+                        print("index out of bounds")
                 elif found == 2:  # if found 2 and disjoint, merge them
                     j1, j2 = subset_idx
                     membership = ((subset[j1] >= 0).astype(int) + (subset[j2] >= 0).astype(int))[:-2]
-                    if len(np.nonzero(membership == 2)[0]) == 0:  # merge
-                        subset[j1][:-2] += (subset[j2][:-2] + 1)
-                        subset[j1][-2:] += subset[j2][-2:]
-                        subset[j1][-2] += connection_all[k][i][2]
-                        subset = np.delete(subset, j2, 0)
-                    else:  # as like found == 1
-                        subset[j1][indexB] = partBs[i]
-                        subset[j1][-1] += 1
-                        
-                        subset[j1][-2] += candidate[partBs[i].astype(int), 2] + connection_all[k][i][2]
+                    try:
+                        if len(np.nonzero(membership == 2)[0]) == 0:  # merge
+                            subset[j1][:-2] += (subset[j2][:-2] + 1)
+                            subset[j1][-2:] += subset[j2][-2:]
+                            subset[j1][-2] += connection_all[k][i][2]
+                            subset = np.delete(subset, j2, 0)
+                        else:  # as like found == 1
+                            subset[j1][indexB] = partBs[i]
+                            subset[j1][-1] += 1
+                            
+                            subset[j1][-2] += candidate[partBs[i].astype(int), 2] + connection_all[k][i][2]
+                    except:
+                        print("index out of bounds")
 
                 # if find no partA in the subset, create a new subset
                 elif not found and k < numparts:
-                    row = -1 * np.ones(len(candidate)+1)
-                    row[indexA] = partAs[i]
-                    row[indexB] = partBs[i]
-                    row[-1] = 2
-                    row[-2] = sum(candidate[connection_all[k][i, :2].astype(int), 2]) + \
-                              connection_all[k][i][2]
-                    subset = np.vstack([subset, row])
+                    try:
+                        row = -1 * np.ones(len(candidate)+1)
+                        row[indexA] = partAs[i]
+                        row[indexB] = partBs[i]
+                        row[-1] = 2
+                        row[-2] = sum(candidate[connection_all[k][i, :2].astype(int), 2]) + \
+                                  connection_all[k][i][2]
+                        subset = np.vstack([subset, row])
+                    except:
+                        print("index out of bounds")
     toc_pafscore=time.time()
     logger.debug('Paf scoring frame time is %.5f' % (toc_pafscore - tic_pafscore))
     # delete some rows of subset which has few parts occur
@@ -365,18 +380,21 @@ def inference(input_image,model, params, model_params,show=False,np1=19,np2=38,r
     mappings=[]
     for i in range(len(limbSeq)):#17
         for n in range(len(subset)):
-            kind=limbSeq[i]
-            index = subset[n][np.array(kind) - 1]
-            if -1 in index:
-                continue
-            Y = candidate[index.astype(int), 0]
-            X = candidate[index.astype(int), 1]
-            S = candidate[index.astype(int), 2]
-            mX = np.mean(X)
-            mY = np.mean(Y)
-            length = ((X[0]*resize - X[1]*resize) ** 2 + (Y[0]*resize - Y[1]*resize) ** 2) ** 0.5
-            angle = math.degrees(math.atan2(X[0]*resize - X[1]*resize, Y[0]*resize - Y[1]*resize))
-            mappings.append([[int(Y[0])*resize,int(X[0])*resize],[int(Y[1])*resize,int(X[1])*resize],np.array(S).mean(),length,angle,kind])
+            try:
+                kind=limbSeq[i]
+                index = subset[n][np.array(kind) - 1]
+                if -1 in index:
+                    continue            
+                Y = candidate[index.astype(int), 0]
+                X = candidate[index.astype(int), 1]
+                S = candidate[index.astype(int), 2]
+                mX = np.mean(X)
+                mY = np.mean(Y)
+                length = ((X[0]*resize - X[1]*resize) ** 2 + (Y[0]*resize - Y[1]*resize) ** 2) ** 0.5
+                angle = math.degrees(math.atan2(X[0]*resize - X[1]*resize, Y[0]*resize - Y[1]*resize))
+                mappings.append([[int(Y[0])*resize,int(X[0])*resize],[int(Y[1])*resize,int(X[1])*resize],np.array(S).mean(),length,angle,kind])
+            except:
+                print(str(index.astype(int))," index does not exists")
     toc_parsing =time.time()
     logger.debug('Parsing result frame time is %.5f' % (toc_parsing - tic_parsing))
     if show:
@@ -397,20 +415,24 @@ def inference(input_image,model, params, model_params,show=False,np1=19,np2=38,r
 
         for i in range(len(limbSeq)):#17
             for n in range(len(subset)):
-                index = subset[n][np.array(limbSeq[i]) - 1]
-                if -1 in index:
-                    continue
-                cur_canvas = canvas.copy()
-                Y = candidate[index.astype(int), 0]
-                X = candidate[index.astype(int), 1]
-                mX = np.mean(X)
-                mY = np.mean(Y)
-                length = ((X[0] - X[1]) ** 2 + (Y[0] - Y[1]) ** 2) ** 0.5
-                angle = math.degrees(math.atan2(X[0] - X[1], Y[0] - Y[1]))
-                polygon = cv2.ellipse2Poly((int(mY), int(mX)), (int(length / 2), stickwidth), int(angle), 0,
-                                           360, 1)
-                cv2.fillConvexPoly(cur_canvas, polygon, colors[i])
-                canvas = cv2.addWeighted(canvas, 0.4, cur_canvas, 0.6, 0)
+                try:
+                    index = subset[n][np.array(limbSeq[i]) - 1]
+                    if -1 in index:
+                        continue
+                
+                    cur_canvas = canvas.copy()
+                    Y = candidate[index.astype(int), 0]
+                    X = candidate[index.astype(int), 1]
+                    mX = np.mean(X)
+                    mY = np.mean(Y)
+                    length = ((X[0] - X[1]) ** 2 + (Y[0] - Y[1]) ** 2) ** 0.5
+                    angle = math.degrees(math.atan2(X[0] - X[1], Y[0] - Y[1]))
+                    polygon = cv2.ellipse2Poly((int(mY), int(mX)), (int(length / 2), stickwidth), int(angle), 0,
+                                               360, 1)
+                    cv2.fillConvexPoly(cur_canvas, polygon, colors[i])
+                    canvas = cv2.addWeighted(canvas, 0.4, cur_canvas, 0.6, 0)
+                except:
+                    print("index out of bounds skipping...")
     
     return canvas,mappings,parts
 
